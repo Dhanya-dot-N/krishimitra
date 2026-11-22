@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KrishiMitra – Smart Farming Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi&family=Noto+Sans+Kannada:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🌾</span>
+      <div>
+        <div class="logo-title">KrishiMitra</div>
+        <div class="logo-sub">कृषि मित्र — Your Farming Companion</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="showTab('disease')">🔬 Disease Detection</button>
+      <button class="nav-btn" onclick="showTab('irrigation')">💧 Irrigation</button>
+      <button class="nav-btn" onclick="showTab('prices')">📈 Market Prices</button>
+      <button class="nav-btn" onclick="showTab('crops')">🌱 Crop Advisor</button>
+    </nav>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" id="lang-hi" onclick="setLanguage('hi')">हि</button>
+      <button class="lang-btn" id="lang-kn" onclick="setLanguage('kn')">ಕ</button>
+    </div>
+  </header>
+<!-- ===== CROP RECOMMENDER TAB ===== -->
+    <section id="tab-crops" class="tab hidden">
+      <div class="section-header">
+        <h2 id="crops-title">🌱 Crop Recommender</h2>
+        <p id="crops-desc">Enter your soil and field details — we'll recommend the best crops to grow.</p>
+      </div>
+
+      <div class="recommender-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nitrogen (N) <span class="unit">kg/ha</span></label>
+            <input type="number" id="npk-n" placeholder="e.g. 80" min="0" max="300" class="text-input num-input">
+          </div>
+          <div class="form-group">
+            <label>Phosphorus (P) <span class="unit">kg/ha</span></label>
+            <input type="number" id="npk-p" placeholder="e.g. 50" min="0" max="200" class="text-input num-input">
+          </div>
+          <div class="form-group">
+            <label>Potassium (K) <span class="unit">kg/ha</span></label>
+            <input type="number" id="npk-k" placeholder="e.g. 60" min="0" max="200" class="text-input num-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Soil Type</label>
+            <select id="soil-type" class="text-input select-input">
+              <option value="">-- Select --</option>
+              <option value="Clay">Clay</option>
+              <option value="Loamy">Loamy</option>
+              <option value="Sandy">Sandy</option>
+              <option value="Red">Red Soil</option>
+              <option value="Black">Black (Regur)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Water Availability</label>
+            <select id="water-avail" class="text-input select-input">
+              <option value="">-- Select --</option>
+              <option value="Irrigated">Irrigated</option>
+              <option value="Rainfed">Rainfed Only</option>
+              <option value="Limited">Limited</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Season</label>
+            <select id="season" class="text-input select-input">
+              <option value="">-- Select --</option>
+              <option value="Kharif">Kharif (Jun-Oct)</option>
+              <option value="Rabi">Rabi (Nov-Mar)</option>
+              <option value="Zaid">Zaid (Mar-Jun)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>State / Region</label>
+            <select id="region" class="text-input select-input">
+              <option value="">-- Select State --</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Kerala">Kerala</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width:100%;margin-top:0.5rem" onclick="getCropRecommendation()">
+          🌾 Get Crop Recommendation
+        </button>
+      </div>
+
+      <div id="cropsLoading" class="loading-box hidden">
+        <div class="spinner"></div>
+        <p>Analyzing your soil profile...</p>
+      </div>
+
+      <div id="cropsResult" class="hidden"></div>
+    </section>
+
+  <main>
+    <!-- ===== DISEASE DETECTION TAB ===== -->
+    <section id="tab-disease" class="tab active">
+      <div class="section-header">
+        <h2 id="disease-title">Crop Disease Detection</h2>
+        <p id="disease-desc">Upload a photo of your crop — our AI will diagnose and prescribe treatment instantly.</p>
+      </div>
+
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text" id="upload-text">Click or drag a crop photo here</div>
+        <div class="upload-sub" id="upload-sub">JPG, PNG up to 10MB</div>
+        <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+      </div>
+
+      <div id="imagePreviewBox" class="image-preview-box hidden">
+        <img id="imagePreview" src="" alt="Crop preview">
+        <button class="btn-secondary" id="btn-change" onclick="resetUpload()">↩ Change Photo</button>
+        <button class="btn-primary" id="btn-analyze" onclick="detectDisease()">🔬 Analyze Crop</button>
+      </div>
+
+      <div id="diseaseLoading" class="loading-box hidden">
+        <div class="spinner"></div>
+        <p id="analyzing-text">Analyzing your crop with AI vision...</p>
+      </div>
+
+      <div id="diseaseResult" class="result-card hidden"></div>
+    </section>
+
+    <!-- ===== IRRIGATION TAB ===== -->
+    <section id="tab-irrigation" class="tab hidden">
+      <div class="section-header">
+        <h2 id="irr-title">Smart Irrigation Advisor</h2>
+        <p id="irr-desc">Enter your location to get today's irrigation recommendation based on live weather.</p>
+      </div>
+       <div class="input-group" style="margin-bottom:0.75rem">
+  <select id="irrigationCrop" class="text-input select-input">
+    <option value="General">-- Select Your Crop (optional) --</option>
+    <option value="Rice">Rice</option>
+    <option value="Wheat">Wheat</option>
+    <option value="Cotton">Cotton</option>
+    <option value="Maize">Maize</option>
+    <option value="Groundnut">Groundnut</option>
+    <option value="Sugarcane">Sugarcane</option>
+    <option value="Tomato">Tomato</option>
+    <option value="Onion">Onion</option>
+    <option value="Arecanut">Arecanut</option>
+    <option value="Ragi">Ragi</option>
+    <option value="Jowar">Jowar</option>
+    <option value="Turmeric">Turmeric</option>
+  </select>
+</div>
+      <div class="input-group">
+        <input type="text" id="cityInput" placeholder="Enter city (e.g. Pune, Nagpur, Ludhiana)" class="text-input">
+        <button class="btn-primary" id="irr-btn" onclick="checkIrrigation()">Check Weather →</button>
+      </div>
+      <p class="or-divider" id="irr-or">— or use your location —</p>
+      <button class="btn-secondary" id="irr-location" onclick="useMyLocation()">📍 Use My Location</button>
+
+      <div id="irrigationLoading" class="loading-box hidden">
+        <div class="spinner"></div>
+        <p id="irr-loading-text">Fetching weather data...</p>
+      </div>
+
+      <div id="irrigationResult" class="result-card hidden"></div>
+    </section>
+
+    <!-- ===== PRICES TAB ===== -->
+    <section id="tab-prices" class="tab hidden">
+      <div class="section-header">
+        <h2 id="prices-title">Market Price Trends</h2>
+        <p id="prices-desc">View mandi price trends for major crops to plan your selling strategy.</p>
+      </div>
+
+      <div class="input-group">
+  <select id="stateSelect" class="text-input select-input" onchange="loadPrices()">
+    <option value="">-- All States --</option>
+    <option value="Karnataka">Karnataka</option>
+    <option value="Maharashtra">Maharashtra</option>
+    <option value="Punjab">Punjab</option>
+    <option value="Andhra Pradesh">Andhra Pradesh</option>
+    <option value="Tamil Nadu">Tamil Nadu</option>
+    <option value="Gujarat">Gujarat</option>
+    <option value="Uttar Pradesh">Uttar Pradesh</option>
+    <option value="Madhya Pradesh">Madhya Pradesh</option>
+    <option value="Rajasthan">Rajasthan</option>
+    <option value="Telangana">Telangana</option>
+    <option value="Kerala">Kerala</option>
+    <option value="West Bengal">West Bengal</option>
+  </select>
+    </div>
+
+      <div class="input-group">
+        <select id="cropSelect" class="text-input select-input" onchange="loadPrices()">
+          <option value="">-- Select a Crop --</option>
+        </select>
+      </div>
+
+      <div id="pricesLoading" class="loading-box hidden">
+        <div class="spinner"></div>
+        <p>Loading price data...</p>
+      </div>
+
+      <div id="pricesResult" class="hidden">
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+        <div id="priceStats" class="stats-row"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-text">KrishiMitra &copy; 2024 &nbsp;|&nbsp; Powered by Claude AI &nbsp;|&nbsp; Built for Indian Farmers 🇮🇳</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/lang.js"></script>
+</body>
+</html>
